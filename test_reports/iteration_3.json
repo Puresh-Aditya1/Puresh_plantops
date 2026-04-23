@@ -1,0 +1,88 @@
+{
+  "summary": "Completed comprehensive testing of date-wise stock movement ledger reports for all 3 product types. Backend APIs 100% working (17/17 tests passed). Frontend UI correctly displays expandable ledger rows with Opening/In/Out/Closing for Semi-Finished, Finished, and Raw Material products. Date range filtering works on all pages. Pack/History/Dispatch forms all functional.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "Login with admin/admin123",
+    "Semi-Finished Products page: Shows expandable product rows with Opening/In/Out/Closing",
+    "Semi-Finished Products page: Click to expand shows date-wise ledger (Production IN, Packing OUT)",
+    "Semi-Finished Products page: Date range filter works (Apply/Reset)",
+    "Semi-Finished Products page: Pack button opens packing form with SKU dropdown",
+    "Semi-Finished Products page: History button shows packing history modal",
+    "Semi-Finished Products page: Export Excel button visible",
+    "Finished Products & Dispatch page: Shows expandable SKU rows with Opening/Packed/Dispatched/Closing",
+    "Finished Products & Dispatch page: Click to expand shows date-wise ledger (Packing IN, Dispatch OUT)",
+    "Finished Products & Dispatch page: Date range filter works",
+    "Finished Products & Dispatch page: Create Dispatch form uses SKU dropdown",
+    "Finished Products & Dispatch page: Recent Dispatches table visible",
+    "Raw Material Stock page: Shows expandable material rows with Opening/Purchased/Used/Closing",
+    "Raw Material Stock page: Click to expand shows date-wise ledger (Purchase IN, Batch Usage OUT)",
+    "Raw Material Stock page: Material filter and date range filter work",
+    "Raw Material Stock page: Add Purchase button opens form with material dropdown",
+    "Backend API: GET /api/reports/semi-finished-ledger returns ledger data with transactions",
+    "Backend API: GET /api/reports/finished-ledger returns ledger data with transactions",
+    "Backend API: GET /api/reports/raw-material-ledger returns ledger data with transactions",
+    "Backend API: Date range filtering on all 3 ledger endpoints",
+    "Backend API: Material filter on raw-material-ledger endpoint",
+    "Backend API: Ledger calculations (closing = opening + in - out) verified",
+    "Backend API: Running balance accuracy verified",
+    "Navigation between all pages works"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_ledger_reports.py",
+    "/app/test_reports/pytest/pytest_ledger.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": [
+    "/app/backend/tests/test_ledger_reports.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (17/17 tests passed)",
+    "frontend": "100% (All ledger features working correctly)"
+  },
+
+  "seed_data_creation": "No new seed data created. Used existing test data from previous iterations.",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Date-wise stock movement ledger feature fully tested and working. Key endpoints: /api/reports/semi-finished-ledger (Production IN, Packing OUT), /api/reports/finished-ledger (Packing IN, Dispatch OUT), /api/reports/raw-material-ledger (Purchase IN, Batch Usage OUT). All support start_date and end_date query params. Raw material ledger also supports material filter. Opening stock is calculated from transactions before start_date. UI shows expandable rows per product/SKU/material with transaction details table.",
+
+  "verified_ledger_behavior": {
+    "semi_finished_ledger": {
+      "endpoint": "/api/reports/semi-finished-ledger",
+      "transaction_types": ["Production (IN)", "Packing (OUT)"],
+      "fields": ["product_name", "opening_stock", "total_in", "total_out", "closing_stock", "transactions"],
+      "filters": ["start_date", "end_date", "product_name"]
+    },
+    "finished_ledger": {
+      "endpoint": "/api/reports/finished-ledger",
+      "transaction_types": ["Packing (IN)", "Dispatch (OUT)"],
+      "fields": ["sku", "unit", "opening_stock", "total_in", "total_out", "closing_stock", "transactions"],
+      "filters": ["start_date", "end_date", "sku"]
+    },
+    "raw_material_ledger": {
+      "endpoint": "/api/reports/raw-material-ledger",
+      "transaction_types": ["Purchase (IN)", "Batch Usage (OUT)"],
+      "fields": ["material_name", "unit", "opening_stock", "total_in", "total_out", "closing_stock", "transactions"],
+      "filters": ["start_date", "end_date", "material"]
+    }
+  }
+}

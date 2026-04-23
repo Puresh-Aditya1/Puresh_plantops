@@ -1,0 +1,35 @@
+{
+  "summary": "Backend-only testing of raw material rate recalculation feature for Puresh Daily Plant Operation. Verified that creating/updating a raw material rate auto-recalculates cost_per_unit in all batches and raw_material_stock entries within the rate's active window, and that batch totals (total_raw_material_cost, cost_per_unit) correctly reflect the updated costs. All 6 pytest tests PASSED against https://daily-plant-ops.preview.emergentagent.com.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_rate_recalculation.py",
+    "/app/test_reports/pytest/rate_recalc_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "recalculate_batches_for_material() in raw_material_routes.py correctly updates both batches and raw_material_stock for affected date windows. Logic is sound.",
+    "update_raw_material_rate enforces latest-rate-only edits and then invokes recalculation -- good.",
+    "create_raw_material_rate auto-closes previous rate by setting its to_date to new_from - 1 day. Verified to work (sugar's older rate correctly has to_date 2026-04-17 while new rate from 2026-04-18 is latest).",
+    "Minor perf: recalculate_batches_for_material loops all batches and stock entries for the material; at large scale consider filtering by date window via aggregation. Not a blocker at current data volume.",
+    "compute_batch_costs derives totals on fetch from stored cost_per_unit -- so only stored per-batch cost_per_unit needs updating. The tests confirm both the stored per-batch value and derived totals update correctly after a rate change.",
+    "No rate-effective-date validation on create/update: overlapping rates or rates with from_date > to_date are accepted silently. Consider enforcing constraints (already partially done via auto-close)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_rate_recalculation.py (new test file created)"
+  ],
+  "success_rate": {"backend": "100% (6/6 tests passed)", "frontend": "not tested (backend-only request)"},
+  "test_credentials": "admin / admin123 used (read from /app/memory/test_credentials.md)",
+  "seed_data_creation": "No new seed data created. Tests use existing batch (042617A with sugar) and (032630A with SMP). Test flow is non-destructive: rate PUT value is mutated then restored; rate POST uses a far-future from_date (2099-01-01) and is deleted + previous rate restored after test.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Test file /app/backend/tests/test_rate_recalculation.py covers: (1) PUT /api/raw-material-rate/{id} -> batches & stock within window get cost_per_unit updated; (2) POST /api/raw-material-rate -> previous latest rate auto-closed to new_from - 1 day, new rate created, batches in prior window unchanged; (3) GET /api/raw-material-rates-all returns expected shape; (4) GET /api/batches returns paginated object with 'batches' key. Note: batches API returns a paginated object {batches: [...], pagination: {...}}, not a bare list.",
+  "rca_of_the_issue": "Original bug: cost_per_unit stored on each batch's raw_materials[] element was never re-read from rates after a rate change. Fix (verified): raw_material_routes.recalculate_batches_for_material() scans all rates for the material, iterates all batches/stock with that material name, and updates each entry's cost_per_unit to the rate active on that date. Called from both create_raw_material_rate and update_raw_material_rate. compute_batch_costs() then derives total_raw_material_cost and cost_per_unit from the freshly-updated stored cost_per_unit values on each GET. End-to-end verified: changing sugar's latest rate (46.5) via PUT updates batch 042617A's sugar cost_per_unit and total_raw_material_cost; creating a future rate correctly auto-closes the previous rate's to_date to (new_from - 1 day) without touching batches outside the new window."
+}

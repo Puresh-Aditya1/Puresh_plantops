@@ -1,0 +1,130 @@
+{
+  "identity": {
+    "name": "E1",
+    "mission": "Create a high-precision, industrial-grade interface for milk product manufacturing. Reject generic SaaS trends; embrace 'Clinical Brutalism'—clean, sharp, and data-first.",
+    "core_principles": [
+      "Hygiene over Hype: The interface must feel 'sterilized'—high white space, crisp borders.",
+      "Data Density: Supervisors need to see batch numbers, fat %, and SNF % instantly. No massive padding in tables.",
+      "Input Ergonomics: Forms are the core workhorse. They must be keyboard-friendly and clearly labeled.",
+      "Role Clarity: Admin views differ significantly from Supervisor views."
+    ]
+  },
+  "theme": {
+    "mode": "light",
+    "reasoning": "Light mode aligns with 'dairy', 'hygiene', and 'cleanliness'. Dark mode feels too software-centric/crypto for a milk factory floor.",
+    "colors": {
+      "primary": {
+        "name": "Industrial Blue",
+        "value": "#0F172A",
+        "usage": "Primary buttons, active states, key text"
+      },
+      "secondary": {
+        "name": "Stainless Steel",
+        "value": "#64748B",
+        "usage": "Secondary text, icons, borders"
+      },
+      "background": {
+        "app": "#F8FAFC",
+        "surface": "#FFFFFF",
+        "input": "#F1F5F9"
+      },
+      "accents": {
+        "action": "#2563EB",
+        "success": "#16A34A",
+        "warning": "#D97706",
+        "error": "#DC2626",
+        "highlight": "#E0F2FE"
+      },
+      "forbidden": [
+        "#1B93A4",
+        "gradients"
+      ]
+    },
+    "typography": {
+      "headings": {
+        "family": "Manrope",
+        "weights": ["600", "700"],
+        "usage": "Page titles, card headers, metric values"
+      },
+      "body": {
+        "family": "IBM Plex Sans",
+        "weights": ["400", "500"],
+        "usage": "Table data, form labels, general text"
+      }
+    },
+    "spacing": {
+      "base_scale": "4px",
+      "container_padding": "p-6 md:p-8",
+      "element_gap": "gap-4"
+    },
+    "radii": {
+      "default": "rounded-sm",
+      "buttons": "rounded-md",
+      "cards": "rounded-none"
+    }
+  },
+  "layout_strategy": {
+    "type": "Bento Grid (High Density)",
+    "grid_cols": "grid-cols-1 md:grid-cols-12",
+    "gap": "gap-4 md:gap-6",
+    "container_style": "max-w-7xl mx-auto",
+    "areas": {
+      "sidebar": "fixed left-0 w-64 h-full hidden md:block",
+      "main_content": "md:ml-64 p-6",
+      "header": "sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-slate-200"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-slate-900 text-white hover:bg-slate-800 rounded-sm shadow-sm font-medium",
+      "secondary": "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 rounded-sm",
+      "destructive": "bg-red-600 text-white hover:bg-red-700 rounded-sm",
+      "ghost": "hover:bg-slate-100 text-slate-600 rounded-sm"
+    },
+    "cards": {
+      "style": "bg-white border border-slate-200 shadow-sm rounded-sm p-5",
+      "header": "border-b border-slate-100 pb-3 mb-4 font-semibold text-slate-800"
+    },
+    "forms": {
+      "input": "bg-white border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-sm h-10",
+      "label": "text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 block",
+      "group": "space-y-4"
+    },
+    "tables": {
+      "header": "bg-slate-50 text-slate-500 text-xs uppercase font-semibold px-4 py-3 text-left border-b border-slate-200",
+      "row": "border-b border-slate-100 hover:bg-slate-50/50 transition-colors",
+      "cell": "px-4 py-3 text-sm text-slate-700 tabular-nums"
+    },
+    "charts": {
+      "library": "Recharts (via Shadcn)",
+      "palette": ["#0F172A", "#334155", "#64748B", "#94A3B8"]
+    }
+  },
+  "assets": {
+    "images": {
+      "login_bg": "https://images.pexels.com/photos/5953801/pexels-photo-5953801.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "dashboard_hero": "https://images.unsplash.com/photo-1735448213929-91564c7af651?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "cheese_production": "https://images.pexels.com/photos/5953691/pexels-photo-5953691.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+    },
+    "icons": {
+      "library": "lucide-react",
+      "style": "stroke-width: 1.5px; size: 18px"
+    }
+  },
+  "instructions_to_main_agent": [
+    "INSTALL_DEPENDENCIES: `npm install lucide-react recharts clsx tailwind-merge @radix-ui/react-slot @radix-ui/react-dialog @radix-ui/react-label @radix-ui/react-select` (and other shadcn deps as needed).",
+    "FONT_SETUP: Add '@font-face' or import Google Fonts for 'Manrope' and 'IBM Plex Sans' in `index.css`. Set them as font-sans and font-mono in tailwind config.",
+    "LAYOUT: Use a Sidebar Layout for the Dashboard. Top bar for User Profile/Logout. Sidebar for Navigation.",
+    "FORMS: Batch Entry is the most critical feature. Split it into clear sections: 'Milk Intake', 'Additives', 'Output'. Use a multi-column grid for inputs to save vertical space.",
+    "REPORTS: Use clean tables with 'Download Excel' button (functionality can be mocked or implemented with `xlsx` library).",
+    "TESTING: Add `data-testid` to EVERY interactive element (buttons, inputs, menu items)."
+  ],
+  "universal_guidelines": [
+    "Do not use gradients for backgrounds.",
+    "Do not use rounded-xl or rounded-2xl; stick to rounded-sm or rounded-md.",
+    "Inputs must have clearly defined borders.",
+    "Use 'sonner' for toast notifications.",
+    "Ensure high contrast for all text (WCAG AA).",
+    "Mock API calls if backend is not ready, but structure the frontend data models to match the problem statement."
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "summary": "Tested Manual Consumption Mode for Packing and Admin-Only Restrictions. All 12 backend API tests passed (100%). All frontend UI tests passed - manual consumption field appears for Lassi 500ml (quantity_consumed=0), does NOT appear for Paneer-1kg (fixed ratio). Activity Log and Wastage Tracker correctly hidden for non-admin users.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "BACKEND: Dahi->Lassi 500ml has quantity_consumed=0 (manual consumption mode)",
+    "BACKEND: Paneer->Paneer-1kg has quantity_consumed=1.0 (fixed ratio mode)",
+    "BACKEND: POST /api/packing-by-product without semi_finished_consumed fails for manual SKUs (400)",
+    "BACKEND: POST /api/packing-by-product with semi_finished_consumed works correctly",
+    "BACKEND: Semi-finished stock deducted by semi_finished_consumed amount",
+    "BACKEND: Existing Dahi stock calculation correct (50kg produced - 20kg consumed = 30kg)",
+    "BACKEND: PUT /api/packing/{id} with semi_finished_consumed updates correctly",
+    "BACKEND: GET /api/activity-logs returns 200 for admin",
+    "BACKEND: GET /api/activity-logs returns 403 for non-admin",
+    "BACKEND: GET /api/activity-logs/categories returns 403 for non-admin",
+    "BACKEND: Wastage summary API accessible (UI restriction is frontend-only)",
+    "BACKEND: Fixed ratio packing works without semi_finished_consumed (auto-calculated)",
+    "FRONTEND: Admin sees Activity Log in sidebar",
+    "FRONTEND: Admin sees Wastage & Loss Tracker on Dashboard",
+    "FRONTEND: Packing form shows 'DAHI USED' field for Lassi 500ml (manual consumption)",
+    "FRONTEND: Packing form does NOT show manual consumption field for Paneer-1kg (fixed ratio)",
+    "FRONTEND: Non-admin does NOT see Activity Log in sidebar",
+    "FRONTEND: Non-admin does NOT see User Management in sidebar",
+    "FRONTEND: Non-admin does NOT see Wastage & Loss Tracker on Dashboard",
+    "FRONTEND: Non-admin does NOT see Entry Lock, Initial Stock Balances, Data Backup sections"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_manual_consumption.py",
+    "/app/test_reports/pytest/pytest_manual_consumption.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "Manual consumption logic correctly implemented in semi_finished_routes.py - checks quantity_consumed=0 or semi_finished_consumed provided",
+    "isManualConsumption helper in SemiFinishedProduct.js correctly identifies SKUs with quantity_consumed=0",
+    "Activity routes properly restrict access with role check at start of each endpoint",
+    "Dashboard.js correctly uses user?.role === 'admin' conditional rendering for admin-only sections",
+    "Layout.js correctly adds Activity Log and User Management to navigation only for admin role"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_manual_consumption.py - Created comprehensive test suite for manual consumption and admin restrictions"
+  ],
+
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (All UI elements and flows working)"
+  },
+
+  "test_credentials": {
+    "admin": {"username": "admin", "password": "admin123", "role": "admin"},
+    "test_nonadmin": {"username": "test_nonadmin", "password": "test123", "role": "modify", "note": "Created and deleted during testing"}
+  },
+
+  "seed_data_creation": "Test user test_nonadmin created and deleted during testing. Test packing entries created and deleted during API tests.",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Manual consumption mode fully functional. Key behavior: When semi-finished master mapping has quantity_consumed=0, the packing form shows a manual input field (e.g., 'DAHI USED') for the user to enter how much semi-finished product was consumed. For fixed ratio SKUs (quantity_consumed > 0), the consumption is auto-calculated. Admin-only restrictions working: Activity Log and Wastage Tracker hidden from non-admin users in both sidebar and dashboard. API endpoints /api/activity-logs and /api/activity-logs/categories return 403 for non-admin users.",
+
+  "feature_verification": {
+    "manual_consumption_packing": {
+      "status": "WORKING",
+      "test_case": "Dahi->Lassi 500ml (quantity_consumed=0)",
+      "behavior": "Shows 'DAHI USED' input field in packing form, requires semi_finished_consumed in API"
+    },
+    "fixed_ratio_packing": {
+      "status": "WORKING",
+      "test_case": "Paneer->Paneer-1kg (quantity_consumed=1.0)",
+      "behavior": "No manual input field, consumption auto-calculated as qty_per_unit * quantity_produced"
+    },
+    "admin_only_activity_log": {
+      "status": "WORKING",
+      "api_restriction": "GET /api/activity-logs returns 403 for non-admin",
+      "ui_restriction": "Activity Log link hidden from sidebar for non-admin"
+    },
+    "admin_only_wastage_tracker": {
+      "status": "WORKING",
+      "ui_restriction": "Wastage & Loss Tracker section hidden from Dashboard for non-admin"
+    },
+    "semi_finished_stock_calculation": {
+      "status": "WORKING",
+      "test_data": "Dahi: produced 50kg, consumed 20kg (via semi_finished_consumed), remaining 30kg"
+    }
+  }
+}

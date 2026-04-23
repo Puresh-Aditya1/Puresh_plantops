@@ -1,0 +1,90 @@
+{
+  "summary": "Raw Material Stock Bug Fixes Verified - Both issues fixed: 1) Multiple purchases for same material on same day now work without 'already exists' error, 2) Edit/Delete buttons now appear for Purchase entries in the ledger view",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "ConfirmDialog",
+        "issues": ["Delete confirmation dialog has yellow background - consider using white/slate for consistency with app design"]
+      }
+    ]
+  },
+
+  "passed_tests": [
+    "Backend: Add first purchase for SMP on 2026-03-24 - SUCCESS",
+    "Backend: Add second purchase for SMP on same day (2026-03-24) - SUCCESS (no 'already exists' error)",
+    "Backend: Add third purchase for SMP on same day - SUCCESS",
+    "Backend: Ledger API returns entry_id field for Purchase transactions - VERIFIED",
+    "Backend: Batch Usage transactions do NOT have entry_id - VERIFIED",
+    "Backend: Edit purchase entry via PUT /api/raw-material-stock/{id} - SUCCESS",
+    "Backend: Delete purchase entry via DELETE /api/raw-material-stock/{id} - SUCCESS",
+    "Frontend: Add Purchase button opens form - SUCCESS",
+    "Frontend: Multiple purchases on same day (2026-03-27) created without error - SUCCESS",
+    "Frontend: Edit buttons (pencil icon) appear for Purchase rows in ledger - VERIFIED",
+    "Frontend: Delete buttons (trash icon) appear for Purchase rows in ledger - VERIFIED",
+    "Frontend: Edit button opens 'Edit Purchase Entry' form with pre-filled data - SUCCESS",
+    "Frontend: Delete button shows ConfirmDialog with Cancel/Delete options - SUCCESS",
+    "Frontend: Batch Usage rows do NOT have edit/delete buttons - VERIFIED (correct behavior)"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_raw_material_stock_fixes.py",
+    "/app/test_reports/pytest/pytest_rm_stock_fixes.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": [
+    "/app/backend/tests/test_raw_material_stock_fixes.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (8/8 tests passed)",
+    "frontend": "100% (All UI tests passed)"
+  },
+
+  "test_credentials": {
+    "admin": {"username": "admin", "password": "admin123", "role": "admin"}
+  },
+
+  "seed_data_creation": "Created test purchases for SMP on dates 2026-03-24, 2026-03-25, 2026-03-26, 2026-03-27 - all cleaned up after testing",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Raw Material Stock page bug fixes verified. Key changes: 1) Backend removed unique constraint on (material_name, date) in create_raw_material_stock endpoint allowing multiple purchases per day, 2) Backend added 'entry_id' field to purchase transactions in raw-material-ledger report, 3) Frontend added Actions column with Edit/Delete buttons for Purchase type rows only (Batch Usage rows correctly have no action buttons). The edit/delete buttons use data-testid attributes: edit-purchase-{entry_id} and delete-purchase-{entry_id}.",
+
+  "bug_verification": {
+    "reported_bugs": [
+      {
+        "issue": "Cannot add purchase for same material on same day - error: 'Stock entry already exists for SMP on 2026-03-24'",
+        "status": "FIXED",
+        "verification": "Successfully added 3 purchases for SMP on same date without any error"
+      },
+      {
+        "issue": "No way to edit or delete purchase entries in the ledger view",
+        "status": "FIXED",
+        "verification": "Edit (pencil) and Delete (trash) buttons now appear in Actions column for Purchase type transactions. Edit opens form with pre-filled data, Delete shows ConfirmDialog."
+      }
+    ],
+    "verification_method": "Backend pytest tests + Playwright UI testing",
+    "screenshots": [
+      ".screenshots/01_raw_material_stock_page.png",
+      ".screenshots/02_smp_expanded.png",
+      ".screenshots/03_add_purchase_form.png",
+      ".screenshots/04_purchase_with_actions.png",
+      ".screenshots/05_edit_purchase_form.png",
+      ".screenshots/06_delete_confirm_dialog.png"
+    ]
+  }
+}

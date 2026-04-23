@@ -1,0 +1,48 @@
+{
+  "summary": "Backend-only testing of bug fix: 'when batch data is edited, recalculation of cost does not happen for finished products'. New helper recalculate_finished_products_for_batch() in batch_routes.py is invoked from update_batch and from raw_material_routes.recalculate_batches_for_material. Verified end-to-end via 6 pytest tests (5 PASSED, 1 SKIPPED due to seed-data limitation, fully documented). Tests run against https://daily-plant-ops.preview.emergentagent.com.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "PUT /api/raw-material-rate/{id}",
+        "issue": "API enforces 'only latest rate can be edited' which blocks direct rate-cascade testing for the existing seed batch (032630A, date 2026-03-30) since its applicable SMP rate (6384bf23, window 2026-03-01..2026-04-09) is no longer the latest (latest is 357.77 from 2026-04-20). Cascade was therefore exercised indirectly via TestBatchEditCascade (which calls the same recalculate_finished_products_for_batch helper)."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_finished_product_cost_recalc.py",
+    "/app/test_reports/pytest/finished_product_cost_recalc.xml"
+  ],
+  "action_items": [
+    "Optional: Consider seeding (or in tests creating) a finished-product-linked batch whose date falls within the latest rate window so that the rate->batch->finished_product cascade can be verified end-to-end via the public API. Current code path is correct via inspection but not directly hit by an integration test.",
+    "Optional UX consideration: when a user edits an older (non-latest) rate, the API returns 400. Frontend should surface this clearly (currently fine).",
+    "Optional perf: recalculate_finished_products_for_batch fetches finished_products with .to_list(100000) - acceptable now, may need pagination at scale."
+  ],
+  "critical_code_review_comments": [
+    "batch_routes.py:71-108 recalculate_finished_products_for_batch correctly recomputes semi_finished_cost = cost_per_kg * semi_finished_consumed and propagates to total_packing_cost (adds additional_materials_cost + additional_costs_total) and cost_per_finished_unit (= total_packing_cost / quantity). Diff guard 'if changed' avoids unnecessary writes - good.",
+    "batch_routes.py:58-68 get_batch_cost_per_kg duplicates math from compute_batch_costs - acceptable since it's pure & non-mutating, but consider extracting a shared helper to remove duplication and avoid future drift.",
+    "batch_routes.py:397-401 update_batch correctly re-fetches the batch from DB before invoking compute_batch_costs and recalculate_finished_products_for_batch - this ensures the response cost_per_unit is the freshly computed value (regression test confirmed: response cost_per_unit > 0 and matches expected). Verified.",
+    "raw_material_routes.py:20-82 recalculate_batches_for_material now collects updated_batch_ids and cascades to recalculate_finished_products_for_batch for each. Looping per-batch keeps the design simple and safe.",
+    "raw_material_routes.py:79-80 cascade only fires for batches whose rm.cost_per_unit actually changed. If rate change does not affect a batch's stored cost (e.g., batch outside new window), finished products are not re-saved - which is correct behavior (idempotent).",
+    "Edge case to be aware of: recalculate_finished_products_for_batch only updates finished_products with semi_finished_consumed != None. Direct 'finished' output_type batches (no packing step) write a finished_product without semi_finished_cost/total_packing_cost fields and are excluded - intentional.",
+    "Potential concurrency hazard (pre-existing, not blocker): rate update + concurrent batch edit could interleave reads/writes since there is no locking. At current single-tenant scale this is fine."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_finished_product_cost_recalc.py (new)"
+  ],
+  "success_rate": {
+    "backend": "100% (5/5 executed; 1 skipped with documented reason)",
+    "frontend": "not tested (backend-only request)"
+  },
+  "test_credentials": "admin / admin123 used (read from /app/memory/test_credentials.md)",
+  "seed_data_creation": "No new seed data created. Tests are non-destructive: batch 032630A and SMP rate 6384bf23 are mutated in-test then fully restored in finally blocks. Future SMP rate (2099-06-15) is created and deleted within TestRateCreateBoundary.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "test file: /app/backend/tests/test_finished_product_cost_recalc.py. Covers (1) Login regression. (2) Batch PUT cascading to linked finished products: edits quantity_produced of Paneer batch 032630A (id=db703b2f-9296-4959-aa4a-8f994f04051f), verifies all 3 linked FPs have semi_finished_cost = new_cost_per_kg * semi_finished_consumed and total_packing_cost / cost_per_finished_unit are recomputed; restores via PUT. (3) Batch PUT response includes computed cost_per_unit > 0 (regression of prior bug). (4) Rate PUT cascade: SKIPPED with documented reason because no seeded finished-product-linked batch exists within any latest-rate window. Falls back to verifying non-disturbance. (5) POST future rate (2099-06-15, value 9999.99): past finished products must not change; new rate then deleted; SMP_RATE 6384bf23 explicitly restored to (300, 2026-03-01..2026-04-09) at end. (6) GET /api/batches paginated and GET /api/finished-products structure regression. Run with: pytest /app/backend/tests/test_finished_product_cost_recalc.py -v.",
+  "rca_of_the_issue": "Bug: batch edit (PUT /api/batches/{id}) updated the batch document but never recomputed the frozen costs stored on linked finished products (semi_finished_cost, total_packing_cost, cost_per_finished_unit). These fields are computed at packing creation time (semi_finished_routes.py L329-L346) using the batch's then-current cost_per_kg and frozen on the FP. Fix: introduced batch_routes.recalculate_finished_products_for_batch(batch_id) which (a) reads the batch fresh from DB, (b) computes pure cost_per_kg via get_batch_cost_per_kg, (c) for each FP with semi_finished_consumed set, recomputes semi_finished_cost = cost_per_kg * consumed, total_packing_cost = sf_cost + additional_materials_cost + additional_costs_total, and cost_per_finished_unit = total_packing_cost / quantity, only writing back when changed. This helper is invoked from update_batch (after compute_batch_costs) and from raw_material_routes.recalculate_batches_for_material for every batch_id whose rm.cost_per_unit actually changed - giving full rate->batch->FP cascade. Verified: editing batch 032630A (quantity_produced 18 -> 23) triggers cost_per_unit change (591.78 -> ~462.7) and all 3 linked Paneer FPs' semi_finished_cost/total_packing_cost/cost_per_finished_unit values get recomputed, then fully restored after the test. Response from PUT batch now correctly returns the new cost_per_unit (was 0 before fix)."
+}

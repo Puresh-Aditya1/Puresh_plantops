@@ -1,0 +1,95 @@
+{
+  "summary": "Batch-to-batch packing feature testing complete. All backend APIs and frontend UI working correctly. Fixed a bug in additional materials cost calculation where the rate lookup was using wrong field names.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "BACKEND: GET /api/batches-for-packing/{product_name} returns batches with available_stock, batch_number, batch_date, batch_cost_per_kg",
+    "BACKEND: POST /api/packing-by-product with batch_id selects specific batch for packing",
+    "BACKEND: POST /api/packing-by-product with additional_materials deducts from raw_material_stock and calculates cost",
+    "BACKEND: Finished product document contains batch_number, semi_finished_cost, additional_materials_cost, total_packing_cost, cost_per_finished_unit",
+    "BACKEND: DELETE /api/packing/{id} restores both semi-finished stock AND additional material stock",
+    "BACKEND: Insufficient stock error handling works correctly",
+    "FRONTEND: Pack form shows batch selector dropdown with batch info (batch_number, date, available_stock, cost_per_kg)",
+    "FRONTEND: Pack form has 'Additional Raw Materials' section with add/remove functionality",
+    "FRONTEND: Material selector shows raw materials from raw_material_master",
+    "FRONTEND: Packing history modal shows batch number badge",
+    "FRONTEND: Packing history modal shows cost breakdown (semi-finished cost, additional materials cost, total, cost/unit)",
+    "FRONTEND: Additional materials details shown in history (e.g., 'SMP: 1 x 295 = 295')"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_batch_packing_features.py",
+    "/app/test_reports/pytest/pytest_batch_packing.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": [
+    "/app/backend/server.py - Fixed additional materials rate lookup (lines 1033-1052): Changed from using 'material_name' and 'effective_date' fields to correctly use 'raw_material_id' and 'from_date'/'to_date' date range matching",
+    "/app/backend/tests/test_batch_packing_features.py - Created comprehensive test suite for batch-to-batch packing features"
+  ],
+
+  "success_rate": {
+    "backend": "100% (8/8 tests passed)",
+    "frontend": "100% (All UI elements and flows working)"
+  },
+
+  "test_credentials": {
+    "admin": {"username": "admin", "password": "admin123", "role": "admin"}
+  },
+
+  "seed_data_creation": "Used existing data: Paneer Block semi-finished product with 2 batches (B202603247534 and B2026032453FA), SMP raw material with rate 295/kg for March 2026",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Batch-to-batch packing feature is fully functional. Key endpoints: GET /api/batches-for-packing/{product_name} returns available batches, POST /api/packing-by-product accepts batch_id and additional_materials. Cost calculation: semi_finished_cost = batch_cost_per_kg × total_kg_consumed, additional_materials_cost = sum of (material_qty × material_rate), total_packing_cost = semi_finished_cost + additional_materials_cost, cost_per_finished_unit = total_packing_cost / quantity_produced. DELETE /api/packing/{id} restores both semi-finished stock and additional materials stock.",
+
+  "bug_fix_applied": {
+    "issue": "Additional materials cost was always 0 because rate lookup used wrong field names",
+    "root_cause": "Code was querying raw_material_rates collection with 'material_name' and 'effective_date' fields, but the actual collection uses 'raw_material_id' and 'from_date'/'to_date'",
+    "fix": "Updated rate lookup to first get material master by name, then query rates by raw_material_id with date range matching",
+    "file": "/app/backend/server.py",
+    "lines": "1033-1052"
+  },
+
+  "feature_verification": {
+    "batches_for_packing_endpoint": {
+      "status": "WORKING",
+      "returns": ["batch_id", "batch_number", "batch_date", "semi_finished_id", "available_stock", "total_produced", "batch_cost_per_kg"]
+    },
+    "packing_with_batch_selection": {
+      "status": "WORKING",
+      "features": ["Selects specific batch", "Deducts from that batch's stock", "Records batch_number in finished product"]
+    },
+    "additional_materials": {
+      "status": "WORKING",
+      "features": ["Deducts from raw_material_stock", "Calculates cost using rate from raw_material_rates", "Records in finished product document"]
+    },
+    "cost_calculation": {
+      "status": "WORKING",
+      "formula": "total_packing_cost = (batch_cost_per_kg × kg_consumed) + sum(material_qty × material_rate)"
+    },
+    "delete_packing": {
+      "status": "WORKING",
+      "features": ["Restores semi-finished stock", "Restores additional materials stock"]
+    },
+    "frontend_ui": {
+      "status": "WORKING",
+      "features": ["Batch selector dropdown", "Additional materials section", "Cost breakdown in history modal", "Batch number badge"]
+    }
+  }
+}
